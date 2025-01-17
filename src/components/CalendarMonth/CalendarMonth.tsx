@@ -1,11 +1,8 @@
 import { createStitches } from '@stitches/react';
 import React, { useState } from 'react';
 import { EventModal } from '../EventModal';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppSelector } from '../../app/hooks';
 import { CalendarEvent } from '../../types/CalendarEvent';
-import { setDescription, setTime, setTitle } from '../../features/formTaskFields/formTaskFields';
-import { DndContext, DragEndEvent, useDraggable, useDroppable } from '@dnd-kit/core';
-import { setEvents } from '../../features/events/events';
 
 const { styled, theme } = createStitches({
   theme: {
@@ -42,14 +39,6 @@ const Day = styled('div', {
   flexDirection: 'column',
 
   cursor: 'pointer',
-
-  // '&::before': {
-  //   content: 'attr(data-day)',
-  // },
-
-  /*  '&:nth-child(n+28):nth-child(-n+31)': {
-    display: 'none',
-    }, */
 
   variants: {
     startDay: Object.fromEntries(
@@ -88,13 +77,8 @@ const Calendar = styled('div', {
   display: 'flex',
   flexWrap: 'wrap',
   gap: theme.sizes.gap,
-  // width: (+boxSize * +days) + (+gap * 6),
   width: `calc((${theme.sizes.boxSize} * ${theme.sizes.days}) + (${theme.sizes.gap} * 6))`,
 
-  /* [`& ${Day}`]: {
-    width: '$boxSize',
-    height: '$boxSize',
-  }, */
 });
 
 type Props = {
@@ -105,34 +89,37 @@ type Props = {
 export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
   const normalizedDay = day.toLowerCase();
   const [showEvent, setShowEvent] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   //specific event
   const [selectedTask, setSelectedTask] = useState<CalendarEvent | null>(null);
 
-  console.log('selectedDate', selectedDate);
+  console.log('selectedDate', selectedDay);
 
   const daysInMonth = Array.from({ length: dayInMonth }, (_, i) => i + 1);
 
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [time, setTime] = useState('09:00');
 
   const handleTaskClick = (
     ev: React.MouseEvent<HTMLDivElement, MouseEvent>,
     task: CalendarEvent,
   ) => {
     ev.stopPropagation();
-
-    dispatch(setTitle(task.title));
-    dispatch(setTime(task.time));
-    dispatch(setDescription(task.description));
+    setTitle(task.title);
+    setTime(task.time);
+    setDescription(task.description);
 
     setSelectedTask(task);
     setShowEvent(true);
-    setSelectedDate(task.day);
+    setSelectedDay(task.day);
   };
 
   const handleSelectedDay = (day: number) => {
     if (typeof day === 'number') {
-      setSelectedDate(day);
+      setSelectedDay(day);
       setShowEvent(true);
       setSelectedTask(null);
     }
@@ -147,62 +134,64 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
       {showEvent && (
         <EventModal
           setShowEvent={setShowEvent}
-          selectedDay={selectedDate}
+          selectedDay={selectedDay}
           selectedTask={selectedTask}
+          title={title}
+          onTitle={setTitle}
+          time={time}
+          onTime={setTime}
+          description={description}
+          onDescription={setDescription}
         />
       )}
 
       <Calendar>
-        
-          {daysInMonth.map((day) => {
-            const tasksOnDay = events.filter(
-              (task: CalendarEvent) =>
-                task.day === day && task.month === month && task.year === year,
-            );
+        {daysInMonth.map((day) => {
+          const tasksOnDay = events.filter(
+            (task: CalendarEvent) => task.day === day && task.month === month && task.year === year,
+          );
 
-            return (
-              <Day
-                onClick={() => {
-                  handleSelectedDay(day);
-                }}
-                key={day}
-                startDay={normalizedDay} /* monthLength={dayInMonth} */
-              >
-                <SpecificDay>
-                  {day}
-                  {tasksOnDay.length > 0 && `   ${tasksOnDay.length} card`}
-                </SpecificDay>
+          return (
+            <Day
+              onClick={() => {
+                handleSelectedDay(day);
+              }}
+              key={day}
+              startDay={normalizedDay}
+            >
+              <SpecificDay>
+                {day}
+                {tasksOnDay.length > 0 && `   ${tasksOnDay.length} card`}
+              </SpecificDay>
 
-                <Events >
-                  {tasksOnDay.map((event: CalendarEvent) => {
-                  /*   if (!event.id) {
-                      return null;
-                    } */
-
+              <Events>
+                {/* <ReactSortable list={events} setList={()=>dispatch(setEvents(events))}> */}
+                  {tasksOnDay.map((task: CalendarEvent) => {
+                   
                     let normalizedTitle: string = '';
 
-                    if (event.title.length > 15) {
-                      normalizedTitle = event.title.slice(0, 16) + '...';
+                    if (task.title.length > 15) {
+                      normalizedTitle = task.title.slice(0, 16) + '...';
                     } else {
-                      normalizedTitle = event.title;
+                      normalizedTitle = task.title;
                     }
 
                     return (
                       <EventTitle
-                        
-                        key={event.id}
+                        key={task.id}
                         onClick={(ev) => {
-                          handleTaskClick(ev, event);
+                          handleTaskClick(ev, task);
                         }}
                       >
                         {normalizedTitle}
                       </EventTitle>
                     );
                   })}
-                </Events>
-              </Day>
-            );
-          })}
+                {/* </ReactSortable> */}
+              </Events>
+            </Day>
+          );
+        })}
       </Calendar>
     </>
   );
