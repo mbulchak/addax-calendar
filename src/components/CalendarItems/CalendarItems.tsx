@@ -5,7 +5,7 @@ import './CalendarItems.scss';
 import { useState } from 'react';
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io';
 import { styled } from '@stitches/react';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { useAppDispatch } from '../../app/hooks';
 import { setMonth, setYear } from '../../features/monthAndYear/monthAndYear';
 
 const CalendarInfo = styled('div', {
@@ -78,21 +78,16 @@ export const CalendarItems = () => {
   const [currentMonth, setCurrentMonth] = useState(moment().format('MMMM'));
   const [currentYear, setCurrentYear] = useState(moment().format('YYYY'));
 
-  // const date = new Date();
+  const todaysMonthAndYear = moment(`${currentMonth}-${currentYear}`, 'YYYY-MMMM').toDate();
+  const todaysDate = new Date(todaysMonthAndYear);
 
-  const smth = moment(`${currentMonth} ${currentYear}`).toDate();
-  const ddd = new Date(smth);
-  console.log(ddd);
-
-  const firstDayOfMonth = new Date(ddd.getFullYear(), ddd.getMonth(), 1);
-  const lastDayOfMonth = new Date(ddd.getFullYear(), ddd.getMonth() + 1, 0);
+  const firstDayOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth(), 1);
+  const lastDayOfMonth = new Date(todaysDate.getFullYear(), todaysDate.getMonth() + 1, 0);
 
   // const countDaysInMonth: number =
   //   Number(moment(lastDayOfMonth).format('D')) - Number(moment(firstDayOfMonth).format('D')) + 1;
 
   const countDaysInMonth = lastDayOfMonth.getDate();
-
-  console.log('count', countDaysInMonth);
 
   const day = moment(firstDayOfMonth).format('ddd');
 
@@ -122,10 +117,7 @@ export const CalendarItems = () => {
     });
   };
 
-  const events = useAppSelector((state) => state.events.events);
   const dispatch = useAppDispatch();
-  console.log(events);
-  // end to do with events in selected day -> also doing map
 
   dispatch(setYear(currentYear));
   dispatch(setMonth(currentMonth));
@@ -133,10 +125,8 @@ export const CalendarItems = () => {
   
   return (
     <>
-      {/* <div className="calendar__info"> */}
       <CalendarInfo>
         <Month>
-          {/* <div className="month"> */}
           <div onClick={handlePreviousMonth}>
             <IconsIoIosUp>
               <IoIosArrowUp />
@@ -155,15 +145,13 @@ export const CalendarItems = () => {
           <span>{currentYear} </span>
         </MonthAndYear>
       </CalendarInfo>
-      {/* </div> */}
-      {/* <h3>Month and year</h3> */}
 
       <CalendarContainer>
         <CalendarWeekdays>
-          {weekDays.map((day) => {
+          {weekDays.map((day, index) => {
             return (
               <>
-                <CalendarWeekday key={day}>{day}</CalendarWeekday>
+                <CalendarWeekday key={index}>{day}</CalendarWeekday>
               </>
             );
           })}
@@ -171,10 +159,6 @@ export const CalendarItems = () => {
 
         <CalendarSheets>
           <CalendarMonth day={day} dayInMonth={countDaysInMonth} />
-
-          {/* {events[day].map((event: Event) => {
-            return <div>{event.title}</div>;
-          })} */}
         </CalendarSheets>
       </CalendarContainer>
     </>

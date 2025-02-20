@@ -2,7 +2,7 @@ import { styled } from '@stitches/react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { addEvent, updateEvent } from '../../features/events/events';
 import { CalendarEvent } from '../../types/CalendarEvent';
-import React, { MouseEvent } from 'react';
+import React, { MouseEvent, useEffect, useState } from 'react';
 
 const EventForm = styled('form', {
   display: 'flex',
@@ -36,26 +36,20 @@ type Props = {
   setShowEvent: React.Dispatch<React.SetStateAction<boolean>>;
   selectedDay: null | number;
   selectedTask: CalendarEvent | null;
-  title: string;
-  onTitle: React.Dispatch<React.SetStateAction<string>>;
-  time: string;
-  onTime: React.Dispatch<React.SetStateAction<string>>;
-  description: string;
-  onDescription: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export const EventModal: React.FC<Props> = ({ setShowEvent, selectedDay, selectedTask,
-  title,
-  onTitle,
-  time,
-  onTime,
-  description,
-  onDescription,
- }) => {
-
+export const EventModal: React.FC<Props> = ({
+  setShowEvent,
+  selectedDay,
+  selectedTask,
+}) => {
   const dispatch = useAppDispatch();
   const month = useAppSelector((state) => state.monthAndYear.month);
   const year = useAppSelector((state) => state.monthAndYear.year);
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [time, setTime] = useState('09:00');
 
   const handleUpdateTask = (event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>) => {
     event.preventDefault();
@@ -72,9 +66,6 @@ export const EventModal: React.FC<Props> = ({ setShowEvent, selectedDay, selecte
       dispatch(updateEvent(eventData));
     }
 
-    onTitle('');
-    onTime('09:00');
-    onDescription('');
     setShowEvent(false);
   };
 
@@ -84,7 +75,7 @@ export const EventModal: React.FC<Props> = ({ setShowEvent, selectedDay, selecte
     if (selectedDay && title) {
       const eventData: CalendarEvent = {
         id: new Date().toISOString(),
-        title: title,
+        title,
         time,
         description,
         day: selectedDay,
@@ -94,25 +85,33 @@ export const EventModal: React.FC<Props> = ({ setShowEvent, selectedDay, selecte
 
       dispatch(addEvent(eventData));
 
-      onTitle('');
-      onTime('09:00');
-      onDescription('');
+      setTitle('');
+      setTime('09:00');
+      setDescription('');
     }
 
     setShowEvent(false);
   };
 
   const handleTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onTitle(event.target.value);
+    setTitle(event.target.value);
   };
 
   const handleTime = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onTime(event.target.value);
+    setTime(event.target.value);
   };
 
   const handleDescription = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onDescription(event.target.value);
+    setDescription(event.target.value);
   };
+
+  useEffect(() => {
+    if (selectedTask) {
+      setTitle(selectedTask.title);
+      setTime(selectedTask.time);
+      setDescription(selectedTask.description);
+    }
+  }, [])
 
   return (
     <EventForm>

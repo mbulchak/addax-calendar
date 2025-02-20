@@ -1,4 +1,4 @@
-import { createStitches } from '@stitches/react';
+/* import { createStitches } from '@stitches/react';
 import React, { useState } from 'react';
 import { EventModal } from '../EventModal';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
@@ -80,13 +80,8 @@ const Calendar = styled('div', {
   display: 'flex',
   flexWrap: 'wrap',
   gap: theme.sizes.gap,
-  // width: (+boxSize * +days) + (+gap * 6),
   width: `calc((${theme.sizes.boxSize} * ${theme.sizes.days}) + (${theme.sizes.gap} * 6))`,
 
-  /* [`& ${Day}`]: {
-    width: '$boxSize',
-    height: '$boxSize',
-  }, */
 });
 
 type Props = {
@@ -98,15 +93,12 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
   const normalizedDay = day.toLowerCase();
   const [showEvent, setShowEvent] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  //specific event
   const [selectedTask, setSelectedTask] = useState<CalendarEvent | null>(null);
 
   const daysInMonth = Array.from({ length: dayInMonth }, (_, i) => i + 1);
 
-  // console.log(typeof dayInMonth.toString());
 
   const dispatch = useAppDispatch();
-  // const events = useAppSelector((state) => state.events.events);
 
   const handleTaskClick = (
     ev: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -166,7 +158,6 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
 
   return (
     <>
-      {/* <EventModal setShowEvent={setShowEvent}/> */}
 
       {showEvent && (
         <EventModal
@@ -188,7 +179,7 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
                 handleSelectedDay(day);
               }}
               key={day}
-              startDay={normalizedDay} /* monthLength={dayInMonth} */
+              startDay={normalizedDay} 
             >
               <SpecificDay>
                 {day}
@@ -229,27 +220,7 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
                   })}
                 </Events>
               </ReactSortable>
-              {/* <Events>
-                {events
-                  .filter(
-                    (event: CalendarEvent) =>
-                      event.day === day && event.month === month && event.year === year,
-                  )
-                  .map((event: CalendarEvent) => {
-                    let normalizedTitle: string = '';
-
-                    if (event.title.length > 15) {
-                      normalizedTitle = event.title.slice(0, 16) + '...';
-                    } else {
-                      normalizedTitle = event.title;
-                    }
-                    return (
-                      <EventTitle key={event.day} onClick={(ev) => {handleTaskClick(ev, event)}}>
-                        {normalizedTitle}
-                      </EventTitle>
-                    );
-                  })}
-              </Events> */}
+              
             </Day>
           );
         })}
@@ -257,3 +228,4 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
     </>
   );
 };
+ */

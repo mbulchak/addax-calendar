@@ -1,8 +1,9 @@
 import { createStitches } from '@stitches/react';
 import React, { useState } from 'react';
 import { EventModal } from '../EventModal';
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { CalendarEvent } from '../../types/CalendarEvent';
+import { setEvents, updateEvent } from '../../features/events/events';
 
 const { styled, theme } = createStitches({
   theme: {
@@ -78,7 +79,6 @@ const Calendar = styled('div', {
   flexWrap: 'wrap',
   gap: theme.sizes.gap,
   width: `calc((${theme.sizes.boxSize} * ${theme.sizes.days}) + (${theme.sizes.gap} * 6))`,
-
 });
 
 type Props = {
@@ -93,24 +93,13 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
   //specific event
   const [selectedTask, setSelectedTask] = useState<CalendarEvent | null>(null);
 
-  console.log('selectedDate', selectedDay);
-
   const daysInMonth = Array.from({ length: dayInMonth }, (_, i) => i + 1);
-
-  // const dispatch = useAppDispatch();
-
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [time, setTime] = useState('09:00');
 
   const handleTaskClick = (
     ev: React.MouseEvent<HTMLDivElement, MouseEvent>,
     task: CalendarEvent,
   ) => {
     ev.stopPropagation();
-    setTitle(task.title);
-    setTime(task.time);
-    setDescription(task.description);
 
     setSelectedTask(task);
     setShowEvent(true);
@@ -129,6 +118,69 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
   const month = useAppSelector((state) => state.monthAndYear.month);
   const year = useAppSelector((state) => state.monthAndYear.year);
 
+  const dispatch = useAppDispatch();
+
+  const handleDragStart = (ev: React.DragEvent, taskId: string) => {
+    ev.dataTransfer.setData('taskId', taskId);
+  };
+
+  const handleDrop = (ev: React.DragEvent, day: number, ) => {
+    ev.preventDefault();
+
+    const taskId = ev.dataTransfer.getData('taskId');
+    const task = events.find((task) => task.id === taskId);
+
+    if (task) {
+      if (task.day === day) {
+        const taskInd = events.filter((t) => t.day === day).findIndex((t) => t.id === taskId);
+
+        if (taskInd !== -1) {
+          const newTaskOrder = handleReorderTasksOnOneCell(events, taskInd, day);
+
+          dispatch(setEvents(newTaskOrder));
+        }
+      } else {
+        const updatedTask = { ...task, day: day };
+        dispatch(updateEvent(updatedTask));
+      }
+    } 
+  };
+
+  const handleReorderTasksOnOneCell = (
+    tasks: CalendarEvent[],
+    taskIndex: number,
+    day: number,
+  ) => {
+    const dayTasks = tasks.filter((task) => (task.day === day));
+
+    const [taskToMove] = dayTasks.splice(taskIndex, 1);
+
+    const newPosition = tasks.length
+    console.log(newPosition);
+
+    dayTasks.splice(newPosition, 0, taskToMove);
+
+    const updatedEvents = tasks.map((task) =>
+      task.day === day ? dayTasks.find((t) => t.id === task.id) : task,
+    );
+
+    return updatedEvents;
+  };
+
+
+  const handleDragOver = (ev: React.DragEvent) => {
+    ev.preventDefault();
+  };
+
+  /* const handleSortEnd = (dayTasks: CalendarEvent[]) => {
+    // Update the events state with the new order of tasks for the specific day
+    const updatedEvents = events.map((event) => {
+      const updatedTask = dayTasks.find((task) => task.id === event.id);
+      return updatedTask ? updatedTask : event;
+    });
+    dispatch(setEvents(updatedEvents));
+  }; */
+
   return (
     <>
       {showEvent && (
@@ -136,12 +188,6 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
           setShowEvent={setShowEvent}
           selectedDay={selectedDay}
           selectedTask={selectedTask}
-          title={title}
-          onTitle={setTitle}
-          time={time}
-          onTime={setTime}
-          description={description}
-          onDescription={setDescription}
         />
       )}
 
@@ -158,6 +204,8 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
               }}
               key={day}
               startDay={normalizedDay}
+              onDrop={(ev) => handleDrop(ev, day)}
+              onDragOver={handleDragOver}
             >
               <SpecificDay>
                 {day}
@@ -165,28 +213,32 @@ export const CalendarMonth: React.FC<Props> = ({ day, dayInMonth }) => {
               </SpecificDay>
 
               <Events>
-                {/* <ReactSortable list={events} setList={()=>dispatch(setEvents(events))}> */}
-                  {tasksOnDay.map((task: CalendarEvent) => {
-                   
-                    let normalizedTitle: string = '';
+                {/* <ReactSortable
+                  list={tasksOnDay}
+                  setList={handleSortEnd}
+                >  */}
+                {tasksOnDay.map((task: CalendarEvent) => {
+                  let normalizedTitle: string = '';
 
-                    if (task.title.length > 15) {
-                      normalizedTitle = task.title.slice(0, 16) + '...';
-                    } else {
-                      normalizedTitle = task.title;
-                    }
+                  if (task.title.length > 15) {
+                    normalizedTitle = task.title.slice(0, 16) + '...';
+                  } else {
+                    normalizedTitle = task.title;
+                  }
 
-                    return (
-                      <EventTitle
-                        key={task.id}
-                        onClick={(ev) => {
-                          handleTaskClick(ev, task);
-                        }}
-                      >
-                        {normalizedTitle}
-                      </EventTitle>
-                    );
-                  })}
+                  return (
+                    <EventTitle
+                      key={task.id}
+                      onClick={(ev) => {
+                        handleTaskClick(ev, task);
+                      }}
+                      draggable
+                      onDragStart={(ev) => handleDragStart(ev, task.id)}
+                    >
+                      {normalizedTitle}
+                    </EventTitle>
+                  );
+                })}
                 {/* </ReactSortable> */}
               </Events>
             </Day>
